@@ -8,3 +8,7 @@ CREATE TABLE notifications (
 
 INSERT INTO notifications (message)
 VALUES ('Hello from Service B DB');
+
+CREATE USER 'root'@'%' IDENTIFIED BY 'rootpassword';
+GRANT ALL PRIVILEGES ON service_a_db.* TO 'root'@'%';
+FLUSH PRIVILEGES;
