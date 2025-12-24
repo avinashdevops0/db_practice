@@ -1,51 +1,104 @@
+// // pipeline {
+// //     aegent any 
+// //     stages {
+// //         stage ("Clean workspace") {
+// //             steps {
+// //                 cleanWs()
+// //             }
+// //         }
+// //         stage ("Code") {
+// //             steps {
+// //                 git branch: 'db', 
+// //                     url: 'https://github.com/avinashdevops0/db_practice.git'
+// //             }
+// //         }
+// //         stage ("Building Docker Images") {
+// //             steps {
+// //                 dir ('micro-service/db-a') {
+// //                     sh 'docker build --no-cache -t db-a-image .'
+// //                 }
+// //                 dir ('micro-service/service-a') {
+// //                     sh 'docker build --no-cache -t service-a-image .'
+// //                 }
+// //                 dir ('micro-service/service-b') {
+// //                     sh 'docker build --no-cache -t service-b-image .'
+// //                 }
+// //                 dir ('micro-service/db-b') {
+// //                     sh 'docker build --no-cache -t db-b-image .'
+// //                 }
+// //             }
+// //         }
+// //         stage ("Running Docker Containers") {
+// //             steps {
+// //                 sh 'docker rm -f mysql-db-a || true'
+// //                 sh 'docker run -d --name mysql-db-a db-a-image'
+        
+// //                 sh 'docker rm -f mysql-db-b || true'
+// //                 sh 'docker run -d --name mysql-db-b db-b-image'
+        
+// //                 sh 'docker rm -f service-a-container || true'
+// //                 sh 'docker run -d --name service-a-container -p 3000:3000 --link mysql-db-a:db-a service-a-image'
+                
+// //                 sh 'docker rm -f service-b-container || true'
+// //                 sh 'docker run -d --name service-b-container -p 4000:4000 --link mysql-db-b:db-b service-b-image'
+// //             }
+// //         }   
+// //     }
+// // }
+
+
 // pipeline {
-//     aegent any 
+//     agent any
 //     stages {
-//         stage ("Clean workspace") {
+//         stage('Clean workspace') {
 //             steps {
 //                 cleanWs()
 //             }
 //         }
-//         stage ("Code") {
+//         stage('Checkout Code') {
 //             steps {
-//                 git branch: 'db', 
+//                 git branch: 'db',
 //                     url: 'https://github.com/avinashdevops0/db_practice.git'
 //             }
 //         }
-//         stage ("Building Docker Images") {
+//         stage('Build Docker Images') {
 //             steps {
-//                 dir ('micro-service/db-a') {
-//                     sh 'docker build --no-cache -t db-a-image .'
-//                 }
-//                 dir ('micro-service/service-a') {
-//                     sh 'docker build --no-cache -t service-a-image .'
-//                 }
-//                 dir ('micro-service/service-b') {
-//                     sh 'docker build --no-cache -t service-b-image .'
-//                 }
-//                 dir ('micro-service/db-b') {
-//                     sh 'docker build --no-cache -t db-b-image .'
+//                 script {
+//                     // Build images for each microservice
+//                     dir('micro-service/db-a') {
+//                         sh 'docker build --no-cache -t db-a-image .'
+//                     }
+//                     dir('micro-service/service-a') {
+//                         sh 'docker build --no-cache -t service-a-image .'
+//                     }
+//                     dir('micro-service/service-b') {
+//                         sh 'docker build --no-cache -t service-b-image .'
+//                     }
+//                     dir('micro-service/db-b') {
+//                         sh 'docker build --no-cache -t db-b-image .'
+//                     }
 //                 }
 //             }
 //         }
-//         stage ("Running Docker Containers") {
+//         stage('Run Docker Containers') {
 //             steps {
-//                 sh 'docker rm -f mysql-db-a || true'
-//                 sh 'docker run -d --name mysql-db-a db-a-image'
-        
-//                 sh 'docker rm -f mysql-db-b || true'
-//                 sh 'docker run -d --name mysql-db-b db-b-image'
-        
-//                 sh 'docker rm -f service-a-container || true'
-//                 sh 'docker run -d --name service-a-container -p 3000:3000 --link mysql-db-a:db-a service-a-image'
-                
-//                 sh 'docker rm -f service-b-container || true'
-//                 sh 'docker run -d --name service-b-container -p 4000:4000 --link mysql-db-b:db-b service-b-image'
+//                 script {
+//                     // Create a Docker network
+//                     sh 'docker network create microservices-network || true'
+                    
+//                     // Run DB containers
+//                     sh 'docker run -d --name mysql-db-a --network microservices-network db-a-image'
+
+//                     sh 'docker run -d --name mysql-db-b --network microservices-network db-b-image'
+
+//                     // Run Service containers
+//                     sh 'docker run -d --name service-a-container --network microservices-network -p 3000:3000 service-a-image'
+//                     sh 'docker run -d --name service-b-container --network microservices-network -p 4000:4000 service-b-image'
+//                 }
 //             }
-//         }   
+//         }
 //     }
 // }
-
 
 pipeline {
     agent any
@@ -87,12 +140,17 @@ pipeline {
                     sh 'docker network create microservices-network || true'
                     
                     // Run DB containers
+                    sh 'docker rm -f mysql-db-a || true'
+                    sh 'docker rm -f mysql-db-b || true'
                     sh 'docker run -d --name mysql-db-a --network microservices-network db-a-image'
+                    sh "sleep 10"
                     sh 'docker run -d --name mysql-db-b --network microservices-network db-b-image'
-
+                    sh "sleep 10"
                     // Run Service containers
-                    sh 'docker run -d --name service-a-container --network microservices-network -p 3000:3000 service-a-image'
-                    sh 'docker run -d --name service-b-container --network microservices-network -p 4000:4000 service-b-image'
+                    sh 'docker rm -f service-a-container || true'
+                    sh 'docker rm -f service-b-container || true'
+                    sh 'docker run -d --name service-a-container --env-file micro-service/service-a/.env.service-a --network microservices-network -p 3000:3000 service-a-image'
+                    sh 'docker run -d --name service-b-container --env-file micro-service/service-b/.env.service-b --network microservices-network -p 4000:4000 service-b-image'
                 }
             }
         }
