@@ -10,6 +10,6 @@ INSERT INTO messages (text)
 VALUES ('Hello from Service A DB');
 
 CREATE USER 'root'@'%' IDENTIFIED BY 'rootpassword';
-GRANT ALL PRIVILEGES ON service_a_db.* TO 'root'@'%';
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%';
 FLUSH PRIVILEGES;
 
