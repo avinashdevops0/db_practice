@@ -1,5 +1,4 @@
-http {
-  server {
+server {
     listen 80;
 
     # Service A
@@ -21,4 +20,4 @@ http {
       return 200 'API Gateway UP';
     }
   }
-}
+
